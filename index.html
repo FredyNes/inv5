@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Reparaciones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #17a2b8;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: center;
+        }
+
+        .search-bar {
+            display: flex;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-bar button:hover {
+            background-color: #2980b9;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn.primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn.success:hover {
+            background-color: #219955;
+        }
+
+        .btn.warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn.warning:hover {
+            background-color: #e67e22;
+        }
+
+        .btn.danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn.danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn.info {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .btn.info:hover {
+            background-color: #148f9c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 25px;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .form-group select {
+            height: 45px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .edit-btn {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #148f9c;
+        }
+
+        .delete-btn {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .stats-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stats-filter {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .stats-filter label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .stats-filter select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-style: italic;
+        }
+
+        .close-modal {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .header-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                padding: 15px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-tools"></i> Registro de Reparaciones</h1>
+            <div class="header-controls">
+                <div class="search-bar">
+                    <input type="text" id="search" placeholder="Buscar por modelo, serial, cliente...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <button id="add-item" class="btn primary"><i class="fas fa-plus"></i> Agregar</button>
+                <button id="stats-btn" class="btn info"><i class="fas fa-chart-bar"></i> Estadísticas</button>
+                <button id="import-csv" class="btn warning"><i class="fas fa-file-import"></i> Importar</button>
+                <button id="export-csv" class="btn success"><i class="fas fa-file-export"></i> Exportar</button>
+                <input type="file" id="csv-file" accept=".csv" style="display: none;">
+            </div>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Modelo</th>
+                    <th>Serial</th>
+                    <th>Cliente</th>
+                    <th>Parte Dañada</th>
+                    <th>Estado</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-items">
+                <!-- Los registros se cargarán aquí -->
+            </tbody>
+        </table>
+
+        <!-- Modal para agregar/editar reparaciones -->
+        <div id="item-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" data-modal="item-modal">&times;</span>
+                <h2 id="modal-title"><i class="fas fa-tools"></i> Agregar Reparación</h2>
+                <form id="item-form">
+                    <input type="hidden" id="item-id">
+                    <div class="form-group">
+                        <label for="item-model">Modelo del equipo</label>
+                        <input type="text" id="item-model" required placeholder="Ej: iPhone 12, Samsung Galaxy S21">
+                    </div>
+                    <div class="form-group">
+                        <label for="item-serial">Número de serie</label>
+                        <input type="text" id="item-serial" required placeholder="Ej: SN123456789">
+                    </div>
+                    <div class="form-group">
+                        <label for="item-client">Nombre del cliente</label>
+                        <input type="text" id="item-client" required placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label for="item-damaged-part">Parte dañada</label>
+                        <select id="item-damaged-part" required>
+                            <option value="">Seleccione una opción</option>
+                            <option value="Pantalla">Pantalla</option>
+                            <option value="Batería">Batería</option>
+                            <option value="Placa base">Placa base/Motherboard</option>
+                            <option value="Conector de carga">Conector de carga</option>
+                            <option value="Botones">Botones físicos</option>
+                            <option value="Cámara">Cámara</option>
+                            <option value="Altavoz">Altavoz</option>
+                            <option value="Micrófono">Micrófono</option>
+                            <option value="Software">Problema de software</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-status">Estado de la reparación</label>
+                        <select id="item-status" required>
+                            <option value="">Seleccione un estado</option>
+                            <option value="Recibido">Recibido</option>
+                            <option value="En diagnóstico">En diagnóstico</option>
+                            <option value="En reparación">En reparación</option>
+                            <option value="Esperando repuesto">Esperando repuesto</option>
+                            <option value="Reparado">Reparado</option>
+                            <option value="No reparado">No reparado</option>
+                            <option value="Entregado">Entregado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-date">Fecha de ingreso</label>
+                        <input type="date" id="item-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-notes">Notas adicionales</label>
+                        <textarea id="item-notes" rows="3" placeholder="Descripción del problema, observaciones..."></textarea>
+                    </div>
+                    <button type="submit" class="btn primary" style="width: 100%; padding: 12px;">
+                        <i class="fas fa-save"></i> Guardar Reparación
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para estadísticas -->
+        <div id="stats-modal" class="modal">
+            <div class="modal-content" style="max-width: 800px;">
+                <span class="close-modal" data-modal="stats-modal">&times;</span>
+                <h2><i class="fas fa-chart-pie"></i> Estadísticas de Reparaciones</h2>
+                
+                <div class="stats-filters">
+                    <div class="stats-filter">
+                        <label for="stats-type">Tipo de gráfico</label>
+                        <select id="stats-type">
+                            <option value="bar">Barras</option>
+                            <option value="pie">Circular</option>
+                            <option value="doughnut">Dona</option>
+                            <option value="line">Líneas</option>
+                        </select>
+                    </div>
+                    <div class="stats-filter">
+                        <label for="stats-metric">Métrica</label>
+                        <select id="stats-metric">
+                            <option value="damagedPart">Parte dañada</option>
+                            <option value="status">Estado</option>
+                            <option value="model">Modelo</option>
+                        </select>
+                    </div>
+                    <div class="stats-filter">
+                        <label for="stats-time">Periodo</label>
+                        <select id="stats-time">
+                            <option value="all">Todo el periodo</option>
+                            <option value="month">Este mes</option>
+                            <option value="week">Esta semana</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="damageChart"></canvas>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+                    <h3><i class="fas fa-info-circle"></i> Resumen</h3>
+                    <div id="stats-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
+                        <!-- Los resúmenes se cargarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let repairs = [];
+        const STORAGE_KEY = 'repairs_data';
+        let damageChart = null;
+
+        // Elementos del DOM
+        const repairsTable = document.getElementById('inventory-items');
+        const addButton = document.getElementById('add-item');
+        const statsButton = document.getElementById('stats-btn');
+        const importButton = document.getElementById('import-csv');
+        const exportButton = document.getElementById('export-csv');
+        const fileInput = document.getElementById('csv-file');
+        const itemModal = document.getElementById('item-modal');
+        const statsModal = document.getElementById('stats-modal');
+        const repairForm = document.getElementById('item-form');
+        const closeModals = document.querySelectorAll('.close-modal');
+        const searchInput = document.getElementById('search');
+        
+        // Elementos de estadísticas
+        const statsTypeSelect = document.getElementById('stats-type');
+        const statsMetricSelect = document.getElementById('stats-metric');
+        const statsTimeSelect = document.getElementById('stats-time');
+        const statsSummary = document.getElementById('stats-summary');
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            setupEventListeners();
+            setupCSVImportExport();
+            
+            // Establecer fecha actual por defecto
+            document.getElementById('item-date').valueAsDate = new Date();
+        });
+
+        function setupEventListeners() {
+            // Botón agregar
+            addButton.addEventListener('click', () => {
+                document.getElementById('modal-title').innerHTML = '<i class="fas fa-plus"></i> Agregar Reparación';
+                document.getElementById('item-id').value = '';
+                document.getElementById('item-date').valueAsDate = new Date();
+                showModal('item-modal');
+            });
+
+            // Botón estadísticas
+            statsButton.addEventListener('click', showStatsModal);
+
+            // Cerrar modales
+            closeModals.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const modalId = btn.getAttribute('data-modal');
+                    hideModal(modalId);
+                });
+            });
+
+            // Clic fuera del modal para cerrar
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    const modalId = e.target.id;
+                    hideModal(modalId);
+                }
+            });
+
+            // Formulario de reparación
+            repairForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveRepair();
+            });
+
+            // Búsqueda
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                filterRepairs(searchTerm);
+            });
+
+            // Filtros de estadísticas
+            statsTypeSelect.addEventListener('change', updateStatsChart);
+            statsMetricSelect.addEventListener('change', updateStatsChart);
+            statsTimeSelect.addEventListener('change', updateStatsChart);
+        }
+
+        function setupCSVImportExport() {
+            // Importar CSV
+            importButton.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const csvData = event.target.result;
+                        const lines = csvData.split('\n').filter(line => line.trim());
+                        
+                        // Obtener cabeceras
+                        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                        
+                        // Validar cabeceras mínimas
+                        const requiredHeaders = ['modelo', 'serial', 'cliente'];
+                        if (!requiredHeaders.every(h => headers.includes(h))) {
+                            throw new Error('El archivo CSV no tiene el formato correcto. Debe incluir al menos: modelo, serial, cliente');
+                        }
+                        
+                        // Procesar líneas de datos
+                        const newRepairs = [];
+                        for (let i = 1; i < lines.length; i++) {
+                            const values = lines[i].split(',');
+                            const repair = {
+                                id: generateId(),
+                                model: values[headers.indexOf('modelo')]?.trim() || 'Desconocido',
+                                serial: values[headers.indexOf('serial')]?.trim() || 'N/A',
+                                client: values[headers.indexOf('cliente')]?.trim() || 'Anónimo',
+                                damagedPart: values[headers.indexOf('parte dañada')]?.trim() || 'Otro',
+                                status: values[headers.indexOf('estado')]?.trim() || 'Recibido',
+                                date: values[headers.indexOf('fecha')]?.trim() || new Date().toISOString().split('T')[0],
+                                notes: values[headers.indexOf('notas')]?.trim() || ''
+                            };
+                            newRepairs.push(repair);
+                        }
+                        
+                        repairs = [...repairs, ...newRepairs];
+                        saveToLocalStorage();
+                        renderRepairs();
+                        showAlert(`Se importaron ${newRepairs.length} reparaciones`, 'success');
+                        
+                    } catch (error) {
+                        console.error('Error al importar CSV:', error);
+                        showAlert(`Error: ${error.message}`, 'danger');
+                    } finally {
+                        // Resetear input file
+                        fileInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // Exportar CSV
+            exportButton.addEventListener('click', exportToCSV);
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.padding = '15px 20px';
+            alert.style.borderRadius = '6px';
+            alert.style.color = 'white';
+            alert.style.backgroundColor = type === 'success' ? '#27ae60' : 
+                                        type === 'danger' ? '#e74c3c' : '#3498db';
+            alert.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+            alert.style.zIndex = '1000';
+            alert.style.animation = 'fadeIn 0.3s';
+            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => alert.remove(), 300);
+            }, 3000);
+        }
+
+        // Funciones CRUD
+        function saveRepair() {
+            const repairData = {
+                id: document.getElementById('item-id').value || generateId(),
+                model: document.getElementById('item-model').value.trim(),
+                serial: document.getElementById('item-serial').value.trim(),
+                client: document.getElementById('item-client').value.trim(),
+                damagedPart: document.getElementById('item-damaged-part').value,
+                status: document.getElementById('item-status').value,
+                date: document.getElementById('item-date').value,
+                notes: document.getElementById('item-notes').value.trim()
+            };
+
+            // Validación básica
+            if (!repairData.model || !repairData.serial || !repairData.client || !repairData.damagedPart || !repairData.status || !repairData.date) {
+                showAlert('Por favor complete todos los campos requeridos', 'danger');
+                return;
+            }
+
+            if (document.getElementById('item-id').value) {
+                // Editar reparación existente
+                const index = repairs.findIndex(r => r.id === repairData.id);
+                if (index !== -1) {
+                    repairs[index] = repairData;
+                    showAlert('Reparación actualizada correctamente', 'success');
+                }
+            } else {
+                // Nueva reparación
+                repairs.push(repairData);
+                showAlert('Reparación agregada correctamente', 'success');
+            }
+
+            saveToLocalStorage();
+            renderRepairs();
+            hideModal('item-modal');
+            updateStatsChart();
+        }
+
+        function editRepair(id) {
+            const repair = repairs.find(r => r.id === id);
+            if (repair) {
+                document.getElementById('item-id').value = repair.id;
+                document.getElementById('item-model').value = repair.model;
+                document.getElementById('item-serial').value = repair.serial;
+                document.getElementById('item-client').value = repair.client;
+                document.getElementById('item-damaged-part').value = repair.damagedPart;
+                document.getElementById('item-status').value = repair.status;
+                document.getElementById('item-date').value = repair.date;
+                document.getElementById('item-notes').value = repair.notes || '';
+                
+                document.getElementById('modal-title').innerHTML = '<i class="fas fa-edit"></i> Editar Reparación';
+                showModal('item-modal');
+            }
+        }
+
+        function deleteRepair(id) {
+            if (confirm('¿Estás seguro de eliminar esta reparación? Esta acción no se puede deshacer.')) {
+                repairs = repairs.filter(r => r.id !== id);
+                saveToLocalStorage();
+                renderRepairs();
+                updateStatsChart();
+                showAlert('Reparación eliminada correctamente', 'success');
+            }
+        }
+
+        // Funciones de renderizado
+        function renderRepairs(repairsToRender = null) {
+            const data = repairsToRender || repairs;
+            repairsTable.innerHTML = '';
+            
+            if (data.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="7" class="no-data">No hay reparaciones registradas</td>`;
+                repairsTable.appendChild(row);
+                return;
+            }
+            
+            // Ordenar por fecha más reciente primero
+            const sortedRepairs = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedRepairs.forEach(repair => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${repair.model}</td>
+                    <td>${repair.serial}</td>
+                    <td>${repair.client}</td>
+                    <td>${repair.damagedPart}</td>
+                    <td><span class="status-badge" style="background-color: ${getStatusColor(repair.status)}">${repair.status}</span></td>
+                    <td>${formatDate(repair.date)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" data-id="${repair.id}" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${repair.id}" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                repairsTable.appendChild(row);
+            });
+
+            // Agregar eventos a los botones
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editRepair(btn.dataset.id));
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteRepair(btn.dataset.id));
+            });
+        }
+
+        function filterRepairs(searchTerm) {
+            if (searchTerm === '') {
+                renderRepairs();
+                return;
+            }
+
+            const filtered = repairs.filter(repair => 
+                repair.model.toLowerCase().includes(searchTerm) ||
+                repair.serial.toLowerCase().includes(searchTerm) ||
+                repair.client.toLowerCase().includes(searchTerm) ||
+                repair.damagedPart.toLowerCase().includes(searchTerm) ||
+                repair.status.toLowerCase().includes(searchTerm) ||
+                repair.date.toLowerCase().includes(searchTerm) ||
+                (repair.notes && repair.notes.toLowerCase().includes(searchTerm))
+            );
+
+            renderRepairs(filtered);
+        }
+
+        // Funciones de estadísticas
+        function showStatsModal() {
+            updateStatsChart();
+            updateStatsSummary();
+            showModal('stats-modal');
+        }
+
+        function updateStatsChart() {
+            const metric = statsMetricSelect.value;
+            const chartType = statsTypeSelect.value;
+            const timeRange = statsTimeSelect.value;
+            
+            // Filtrar por periodo si es necesario
+            let filteredRepairs = [...repairs];
+            const now = new Date();
+            
+            if (timeRange === 'month') {
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                filteredRepairs = repairs.filter(r => new Date(r.date) >= firstDay);
+            } else if (timeRange === 'week') {
+                const firstDay = new Date(now);
+                firstDay.setDate(firstDay.getDate() - firstDay.getDay());
+                filteredRepairs = repairs.filter(r => new Date(r.date) >= firstDay);
+            }
+            
+            // Calcular estadísticas
+            const metricCounts = {};
+            filteredRepairs.forEach(repair => {
+                metricCounts[repair[metric]] = (metricCounts[repair[metric]] || 0) + 1;
+            });
+
+            const labels = Object.keys(metricCounts);
+            const data = Object.values(metricCounts);
+            
+            // Ordenar por cantidad (mayor a menor)
+            const combined = labels.map((label, i) => ({ label, count: data[i] }));
+            combined.sort((a, b) => b.count - a.count);
+            
+            const sortedLabels = combined.map(item => item.label);
+            const sortedData = combined.map(item => item.count);
+            
+            // Colores para el gráfico
+            const backgroundColors = [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(199, 199, 199, 0.7)',
+                'rgba(83, 102, 255, 0.7)',
+                'rgba(255, 102, 102, 0.7)',
+                'rgba(102, 255, 102, 0.7)'
+            ];
+
+            // Crear o actualizar gráfico
+            const ctx = document.getElementById('damageChart').getContext('2d');
+            
+            if (damageChart) {
+                damageChart.destroy();
+            }
+            
+            damageChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: sortedLabels,
+                    datasets: [{
+                        label: `Reparaciones por ${getMetricLabel(metric)}`,
+                        data: sortedData,
+                        backgroundColor: backgroundColors.slice(0, sortedLabels.length),
+                        borderColor: backgroundColors.map(c => c.replace('0.7', '1')).slice(0, sortedLabels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        title: {
+                            display: true,
+                            text: `Distribución de reparaciones por ${getMetricLabel(metric)}`,
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const value = context.raw;
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: chartType === 'bar' ? {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    } : undefined
+                }
+            });
+        }
+
+        function updateStatsSummary() {
+            const timeRange = statsTimeSelect.value;
+            let filteredRepairs = [...repairs];
+            const now = new Date();
+            
+            if (timeRange === 'month') {
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                filteredRepairs = repairs.filter(r => new Date(r.date) >= firstDay);
+            } else if (timeRange === 'week') {
+                const firstDay = new Date(now);
+                firstDay.setDate(firstDay.getDate() - firstDay.getDay());
+                filteredRepairs = repairs.filter(r => new Date(r.date) >= firstDay);
+            }
+            
+            const totalRepairs = filteredRepairs.length;
+            const completedRepairs = filteredRepairs.filter(r => r.status === 'Reparado' || r.status === 'Entregado').length;
+            const pendingRepairs = filteredRepairs.filter(r => r.status !== 'Reparado' && r.status !== 'Entregado' && r.status !== 'No reparado').length;
+            
+            // Calcular parte más común
+            const partCounts = {};
+            filteredRepairs.forEach(repair => {
+                partCounts[repair.damagedPart] = (partCounts[repair.damagedPart] || 0) + 1;
+            });
+            
+            const mostCommonPart = Object.entries(partCounts).sort((a, b) => b[1] - a[1])[0] || ['N/A', 0];
+            
+            statsSummary.innerHTML = `
+                <div style="padding: 10px; background-color: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4 style="color: var(--primary); margin-bottom: 5px;"><i class="fas fa-list-ol"></i> Total</h4>
+                    <p style="font-size: 24px; font-weight: bold; color: var(--dark);">${totalRepairs}</p>
+                </div>
+                <div style="padding: 10px; background-color: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4 style="color: var(--success); margin-bottom: 5px;"><i class="fas fa-check-circle"></i> Completadas</h4>
+                    <p style="font-size: 24px; font-weight: bold; color: var(--dark);">${completedRepairs}</p>
+                </div>
+                <div style="padding: 10px; background-color: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4 style="color: var(--warning); margin-bottom: 5px;"><i class="fas fa-clock"></i> Pendientes</h4>
+                    <p style="font-size: 24px; font-weight: bold; color: var(--dark);">${pendingRepairs}</p>
+                </div>
+                <div style="padding: 10px; background-color: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4 style="color: var(--info); margin-bottom: 5px;"><i class="fas fa-wrench"></i> Parte más común</h4>
+                    <p style="font-size: 18px; font-weight: bold; color: var(--dark);">${mostCommonPart[0]}</p>
+                    <p style="font-size: 14px; color: var(--gray);">${mostCommonPart[1]} reparaciones</p>
+                </div>
+            `;
+        }
+
+        // Funciones de utilidad
+        function getStatusColor(status) {
+            const colors = {
+                'Recibido': '#3498db',
+                'En diagnóstico': '#9b59b6',
+                'En reparación': '#f39c12',
+                'Esperando repuesto': '#e67e22',
+                'Reparado': '#27ae60',
+                'No reparado': '#e74c3c',
+                'Entregado': '#2ecc71'
+            };
+            return colors[status] || '#95a5a6';
+        }
+
+        function getMetricLabel(metric) {
+            const labels = {
+                'damagedPart': 'parte dañada',
+                'status': 'estado',
+                'model': 'modelo'
+            };
+            return labels[metric] || metric;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('es-ES', options);
+        }
+
+        function exportToCSV() {
+            if (repairs.length === 0) {
+                showAlert('No hay reparaciones para exportar', 'warning');
+                return;
+            }
+            
+            // Cabeceras CSV
+            const headers = ['Modelo', 'Serial', 'Cliente', 'Parte Dañada', 'Estado', 'Fecha', 'Notas'];
+            
+            // Datos CSV
+            const csvRows = [];
+            csvRows.push(headers.join(','));
+            
+            repairs.forEach(repair => {
+                const row = [
+                    `"${repair.model.replace(/"/g, '""')}"`,
+                    `"${repair.serial.replace(/"/g, '""')}"`,
+                    `"${repair.client.replace(/"/g, '""')}"`,
+                    `"${repair.damagedPart.replace(/"/g, '""')}"`,
+                    `"${repair.status.replace(/"/g, '""')}"`,
+                    `"${repair.date}"`,
+                    `"${(repair.notes || '').replace(/"/g, '""')}"`
+                ];
+                csvRows.push(row.join(','));
+            });
+            
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `reparaciones_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert('Exportación completada correctamente', 'success');
+        }
+
+        // Funciones de almacenamiento
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(repairs));
+        }
+
+        function loadFromLocalStorage() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (data) {
+                try {
+                    repairs = JSON.parse(data);
+                    renderRepairs();
+                } catch (e) {
+                    console.error('Error al cargar datos:', e);
+                    repairs = [];
+                }
+            }
+        }
+
+        // Funciones de modal
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+            if (modalId === 'item-modal') {
+                repairForm.reset();
+            }
+        }
+    </script>
+</body>
+</html>
